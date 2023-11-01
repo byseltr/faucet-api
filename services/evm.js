@@ -62,7 +62,7 @@ export default class EVM {
 			cb({
 				status: 400,
 				// message: 'Tweet has used! Please try again',
-				message: `turl: ${turl},db: ${ct}`,
+				message: `turl: ${turl}, db: ${ct}`,
 			})
 			return
 		}
@@ -116,7 +116,8 @@ export default class EVM {
 				}
 			} else if (this.nonce === -1) {
 				clearInterval(WaitingNonce)
-				this.nonce = this.hasNonce
+				// this.nonce = this.hasNonce
+				this.updateNonce()
 
 				this.working = false
 				console.log("Something went wrong! Please try again")

@@ -47,7 +47,16 @@ export default class EVM {
 			return
 		}
 
-		const ct = await findTweet(turl)
+		if (turl === '' || turl === null) {
+			console.log('Invalid tweet url! Please try again.')
+			cb({
+				status: 400,
+				message: 'Invalid tweet url! Please try again.',
+			})
+			return
+		}
+
+		let ct = await findTweet(turl)
 		if (!ct) {
 			console.log("Tweet has been used! Please try again.")
 			cb({
@@ -106,6 +115,7 @@ export default class EVM {
 				}
 			} else if (this.nonce === -1) {
 				clearInterval(WaitingNonce)
+				this.nonce = this.hasNonce
 
 				this.working = false
 				console.log("Something went wrong! Please try again")

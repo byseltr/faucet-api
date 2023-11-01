@@ -61,7 +61,8 @@ export default class EVM {
 			console.log("Tweet has been used! Please try again.")
 			cb({
 				status: 400,
-				message: 'Tweet has used! Please try again',
+				// message: 'Tweet has used! Please try again',
+				message: `turl: ${turl},db: ${ct}`,
 			})
 			return
 		}

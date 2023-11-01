@@ -118,6 +118,9 @@ export default class EVM {
 				clearInterval(WaitingNonce)
 				// this.nonce = this.hasNonce
 				// this.updateNonce()
+				if (this.nonce === this.hasNonce + BigInt(1)) {
+					this.nonce = this.hasNonce - BigInt(1)
+				}
 
 				this.working = false
 				console.log("Something went wrong! Please try again")

@@ -47,7 +47,7 @@ export default class EVM {
 			return
 		}
 
-		if (turl === '' || turl === null) {
+		if (turl === '' || turl === undefined || turl === null) {
 			console.log('Invalid tweet url! Please try again.')
 			cb({
 				status: 400,
@@ -118,13 +118,13 @@ export default class EVM {
 				clearInterval(WaitingNonce)
 				// this.nonce = this.hasNonce
 				// this.updateNonce()
-				if (this.nonce === this.hasNonce + BigInt(1)) {
-					this.nonce = this.hasNonce - BigInt(1)
-				}
+				// if (this.nonce === this.hasNonce + BigInt(1)) {
+				// 	this.nonce = this.hasNonce - BigInt(1)
+				// }
 
 				this.working = false
 				console.log("Something went wrong! Please try again")
-				cb({status: 400, message: 'Something went wrong!'})
+				cb({status: 400, message: `nonce: ${this.nonce}, has: ${this.hasNonce}`})
 			}
 		}, 300)
 	}
@@ -132,7 +132,7 @@ export default class EVM {
 	// Updating new nonce
 	async updateNonce() {
 		try {
-			this.nonce = await this.web3.eth.getTransactionCount(this.account.address, 'pending')
+			this.nonce = await this.web3.eth.getTransactionCount(this.account.address)
 			console.log("success updating nonce!")
 		} catch(err) {
 			console.log("failed can't updating nonce!")

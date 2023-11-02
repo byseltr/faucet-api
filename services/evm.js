@@ -12,12 +12,11 @@ export default class EVM {
 		this.hasNonce = 0
 
 		this.ID = config.ID
-		this.EXPLORER = config.EXPLORER
-
 		this.NAME = config.NAME
 		this.AMOUNT = this.web3.utils.toWei(config.DRIP_AMOUNT, 'ether')
 		this.MAX_PRIORITY_FEE = this.web3.utils.toWei(config.MAX_PRIORITY_FEE, 'gwei')
 		this.MAX_FEE = this.web3.utils.toWei(config.MAX_FEE, 'gwei')
+		this.EXPLORER = config.EXPLORER
 
 		this.working = false
 		this.updateNonce()
@@ -62,7 +61,6 @@ export default class EVM {
 			cb({
 				status: 400,
 				message: 'Tweet has used! Please try again',
-				// message: `turl: ${turl}, db: ${ct}`,
 			})
 			return
 		}
@@ -70,7 +68,7 @@ export default class EVM {
 		// indicates this function on the going work
 		this.working = true
 
-		// data can save to database
+		// initialize data oobject
 		let data = {
 			address: receiver,
 			chain: this.ID,
@@ -96,13 +94,12 @@ export default class EVM {
 				const { txHash } = await this.newTransaction(receiver, amount, nonce)
 				
 				this.working = false
-				// console.log("txHash:",txHash)
 
 				if (txHash) {
 					data.hash = txHash
+
 					const res = await newTx(data)
-					// console.log("[DB]", res)
-					
+					console.log("[DB]", res)
 					cb({
 						status: 200,
 						message: `Transaction successful on ${this.NAME}!`,
@@ -118,10 +115,9 @@ export default class EVM {
 				clearInterval(WaitingNonce)
 
 				this.working = false
-				console.log("Something went wrong! Please try again")
 				cb({
 					status: 400,
-					message: `nonce: ${this.nonce}, has: ${this.hasNonce}`
+					message: 'Server is busy! Please try again'
 				})
 			}
 		}, 300)

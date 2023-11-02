@@ -1,23 +1,29 @@
 import express from 'express'
 import cors from 'cors'
-import logger from './log.js'
+import corsOptions from './middlewares/cors.js'
+import bodyParser from 'body-parser'
 import router from './api/index.js'
+// import logger from './log.js'
 import './loadENV.js'
 
 const port = process.env.PORT || 5000
 const server = express()
 
-server.use(cors())
-server.use(logger)
-server.use(express.json())
+server.use(cors(corsOptions))
+// server.use(bodyParser.urlencoded({ extended: false }))
+server.use(bodyParser.json())
+
+// server.use(logger)
 server.use('/api', router)
 
 server.get('/ip', (req, res) => {
-	res.send({ip: req.headers['cf-connecting-ip'] || req.ip})
+	res.send({
+		ip: req.headers["cf-connecting-ip"] || req.ip
+	})
 })
 
 server.get('/status', (req, res) => {
-	res.send('working')
+	res.send('server working')
 })
 
 server.get('*', (req, res) => {

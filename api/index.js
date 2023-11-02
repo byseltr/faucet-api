@@ -43,8 +43,8 @@ router.get('/txs', async (req, res) => {
 
 	if (txs === undefined) {
 		res.send({
-			status: 200,
-			message: "Cannot get 10 last tx history!"
+			status: 400,
+			message: "Cannot get tx history!"
 		})
 		return
 	}

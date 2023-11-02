@@ -6,8 +6,8 @@ const chains = [
 		"RPC": "https://polygon-mumbai-bor.publicnode.com",
 		"EXPLORER": "https://mumbai.polygonscan.com/tx/",
 		"DRIP_AMOUNT": 0.0001,
-		"MAX_PRIORITY_FEE": "3.5",
-		"MAX_FEE": "3.6",
+		"MAX_PRIORITY_FEE": "2",
+		"MAX_FEE": "2.1",
 	},
 	{
 		"ID": "FUJI",

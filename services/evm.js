@@ -1,7 +1,7 @@
 import Web3 from 'web3'
 import { findTweet, newTx } from './db.js'
 
-const PvK = process.env.PK || ''
+const PvK = process.env.PK
 
 export default class EVM {
 	constructor(config) {
@@ -9,7 +9,7 @@ export default class EVM {
 		this.account = this.web3.eth.accounts.privateKeyToAccount(PvK)
 
 		this.nonce = -1
-		this.hasNonce =
+		this.hasNonce = 0
 
 		this.ID = config.ID
 		this.EXPLORER = config.EXPLORER
@@ -96,12 +96,12 @@ export default class EVM {
 				const { txHash } = await this.newTransaction(receiver, amount, nonce)
 				
 				this.working = false
-				console.log("txHash:",txHash)
+				// console.log("txHash:",txHash)
 
 				if (txHash) {
 					data.hash = txHash
 					const res = await newTx(data)
-					console.log("[DB]", res)
+					// console.log("[DB]", res)
 					
 					cb({
 						status: 200,
@@ -132,7 +132,7 @@ export default class EVM {
 	// Updating new nonce
 	async updateNonce() {
 		try {
-			this.nonce = await this.web3.eth.getTransactionCount(this.account.address)
+			this.nonce = await this.web3.eth.getTransactionCount(this.account.address, 'latest')
 			console.log("success updating nonce!")
 		} catch(err) {
 			console.log("failed can't updating nonce!")

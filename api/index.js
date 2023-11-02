@@ -26,11 +26,13 @@ router.post('/drip', async (req, res) => {
 	if(evm) {
 		evm.instance.sendTX(address, tweet, (data) => {
 			const { status, message, txHash } = data
-			res.status(status).send({message, txHash})
+			res.send({status, message, txHash})
 		})
 	} else {
-		// chain not support
-		res.status(400).send({message: "Invalid chains passed!"})
+		res.send({
+			status: 400,
+			message: "Invalid chains passed!"
+		})
 	}
 })
 
@@ -40,13 +42,16 @@ router.get('/txs', async (req, res) => {
 	let txs = await findTxs()
 
 	if (txs === undefined) {
-		res.status(400).send({message: "Cannot get 10 last tx history!"})
+		res.send({
+			status: 200,
+			message: "Cannot get 10 last tx history!"
+		})
 		return
 	}
 
 	// split data
 	let { left, right } = splitter(txs)
-	res.status(200).send({left, right})
+	res.send({left, right})
 })
 
 export default router

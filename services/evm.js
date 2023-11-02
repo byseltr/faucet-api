@@ -1,7 +1,7 @@
 import Web3 from 'web3'
 import { findTweet, newTx } from './db.js'
 
-const PvK = process.env.PK
+const PvK = process.env.PK || ''
 
 export default class EVM {
 	constructor(config) {
@@ -47,7 +47,7 @@ export default class EVM {
 			return
 		}
 
-		if (turl === '' || turl === undefined || turl === null) {
+		if (turl === undefined || turl === null) {
 			console.log('Invalid tweet url! Please try again.')
 			cb({
 				status: 400,
@@ -116,15 +116,13 @@ export default class EVM {
 				}
 			} else if (this.nonce === -1) {
 				clearInterval(WaitingNonce)
-				// this.nonce = this.hasNonce
-				this.updateNonce()
-				// if (this.nonce === this.hasNonce + BigInt(1)) {
-				// 	this.nonce = this.hasNonce - BigInt(1)
-				// }
 
 				this.working = false
 				console.log("Something went wrong! Please try again")
-				cb({status: 400, message: `nonce: ${this.nonce}, has: ${this.hasNonce}`})
+				cb({
+					status: 400,
+					message: `nonce: ${this.nonce}, has: ${this.hasNonce}`
+				})
 			}
 		}, 300)
 	}

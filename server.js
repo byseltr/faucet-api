@@ -13,7 +13,7 @@ server.use(express.json())
 server.use('/api', router)
 
 server.get('/ip', (req, res) => {
-	res.send({ip: req.ip || req.headers['cf-connecting-ip']})
+	res.send({ip: req.headers['cf-connecting-ip'] || req.ip})
 })
 
 server.get('/status', (req, res) => {
@@ -21,7 +21,6 @@ server.get('/status', (req, res) => {
 })
 
 server.get('*', (req, res) => {
-	res.status(404)
 	res.send('page not found!')
 })
 

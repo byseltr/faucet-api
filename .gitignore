@@ -1,14 +1,5 @@
 # dependencies
 node_modules
-config
-
-# production
-/build
-build
 
 # misc
 .env
-
-# testing components
-test
-testing

@@ -117,7 +117,7 @@ export default class EVM {
 			} else if (this.nonce === -1) {
 				clearInterval(WaitingNonce)
 				// this.nonce = this.hasNonce
-				// this.updateNonce()
+				this.updateNonce()
 				// if (this.nonce === this.hasNonce + BigInt(1)) {
 				// 	this.nonce = this.hasNonce - BigInt(1)
 				// }

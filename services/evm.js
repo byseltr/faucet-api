@@ -117,7 +117,15 @@ export default class EVM {
 				this.working = false
 				cb({
 					status: 400,
-					message: 'Server is busy! Please try again'
+					message: 'Server is busy! Please try again later'
+				})
+			} else {
+				clearInterval(WaitingNonce)
+
+				this.working = false
+				cb({
+					status: 400,
+					message: 'Something went wrong! Please try again later'
 				})
 			}
 		}, 300)

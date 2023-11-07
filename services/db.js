@@ -60,3 +60,12 @@ export const newTx = async (drip) => {
 	let result = await txs.insertOne(drip)
 	return result
 }
+
+// newTicket are create and insert new ticket
+export const newTicket = async (ticket) => {
+	const tickets = await db.collection('tickets')
+
+	ticket.time = new Date()
+	let result = await tickets.insertOne(ticket)
+	return result
+}

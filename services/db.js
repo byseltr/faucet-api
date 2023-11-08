@@ -14,7 +14,7 @@ const connect = async () => {
 	let conn
 	try {
 		conn = await client.connect()
-		console.log("[DB] connected to database...")
+		console.log("[DB] connected to database")
 	} catch(err) {
 		console.error(err)
 		return 
@@ -63,9 +63,11 @@ export const newTx = async (drip) => {
 
 // newTicket are create and insert new ticket
 export const newTicket = async (ticket) => {
-	const tickets = await db.collection('tickets')
+	const collection = await db.collection('tickets')
 
 	ticket.time = new Date()
-	let result = await tickets.insertOne(ticket)
+	ticket.isRead = false
+	ticket.isReply = false
+	let result = await collection.insertOne(ticket)
 	return result
 }

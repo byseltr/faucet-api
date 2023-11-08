@@ -68,14 +68,6 @@ export default class EVM {
 		// indicates this function on the going work
 		this.working = true
 
-		// initialize data oobject
-		let data = {
-			address: receiver,
-			chain: this.ID,
-			tweet: turl,
-			explorer: this.EXPLORER,
-		}
-
 		const amount = this.AMOUNT
 
 		// checking prev and curr nonce are same
@@ -96,10 +88,17 @@ export default class EVM {
 				this.working = false
 
 				if (txHash) {
-					data.hash = txHash
+					// initialize data oobject
+					let data = {
+						address: receiver,
+						chain: this.ID,
+						tweet: turl,
+						explorer: this.EXPLORER,
+						hash: txHash,
+					}
 
 					const res = await newTx(data)
-					console.log("[DB]", res)
+					console.log("[DB] >>saving=>", res)
 					cb({
 						status: 200,
 						message: `Transaction successful on ${this.NAME}!`,
@@ -156,12 +155,12 @@ export default class EVM {
 		let signedTx
 		try {
 			const signTx = await this.account.signTransaction(tx)
-			signedTx = await this.web3.eth.sendSignedTransaction(signTx.rawTransaction)
+			signedTx = await this.web3.eth.sendSignedTransaction(signTx?.rawTransaction)
 		} catch(err) {
 			console.error(err)
 		}
 
-		const txHash = signedTx.transactionHash
+		const txHash = signedTx?.transactionHash
 		return { txHash }
 	}
 }

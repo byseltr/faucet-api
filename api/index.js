@@ -20,18 +20,19 @@ chains.forEach((chain) => {
 router.post('/drip', async (req, res) => {
 	const address = req.body?.address
 	const tweet = req.body?.tweet
+	const text = req.body?.text
 	const chain = req.body?.chain
 
 	const evm = evms.get(chain)
 	if(evm) {
-		evm.instance.sendTX(address, tweet, (data) => {
+		evm.instance.sendTX(address, tweet, text, (data) => {
 			const { status, message, txHash } = data
 			res.send({status, message, txHash})
 		})
 	} else {
 		res.send({
 			status: 400,
-			message: "Invalid chains passed!"
+			message: "Invalid chain passed!"
 		})
 	}
 })
@@ -41,7 +42,7 @@ router.post('/drip', async (req, res) => {
 router.get('/txs', async (req, res) => {
 	let txs = await findTxs()
 
-	if (txs === undefined) {
+	if (!txs) {
 		res.send({
 			status: 400,
 			message: "Cannot get tx history!"
@@ -65,10 +66,11 @@ router.post('/support', async (req, res) => {
 	})
 
 	if (ticket) {
-		res.send({ message: 'Success to submit a ticket'})
+		res.send({ message: 'Success to submiting ticket'})
 	} else {
-		res.send({ message: 'Failed to submit a ticket'})
+		res.send({ message: 'Failed to submiting ticket'})
 	}
 })
+
 
 export default router

@@ -1,5 +1,6 @@
 import Web3 from 'web3'
 import { findTweet, newTx } from './db.js'
+import isValidTweet from './twitter.js'
 
 const PvK = process.env.PK || ''
 
@@ -9,7 +10,7 @@ export default class EVM {
 		this.account = this.web3.eth.accounts.privateKeyToAccount(PvK)
 
 		this.nonce = -1
-		this.hasNonce = 0
+		this.hasNonce = false
 
 		this.ID = config.ID
 		this.NAME = config.NAME
@@ -20,25 +21,29 @@ export default class EVM {
 
 		this.working = false
 		this.updateNonce()
-
-		setTimeout(() => {
-			console.log("[EVM ENGINE] starting faucet drips...")
-		}, 4000)
 	}
 
-	// Processing a new TX from request
-	async sendTX(receiver, turl, cb) {
+	// Processing a new TX Drip from request
+	async sendTX(receiver, turl, text, cb) {
 		if (this.working) {
-			console.log("Faucet is getting working! Please try again,")
 			cb({
 				status: 400,
-				message: 'Faucet is getting working! Please try again',
+				message: 'Waiting job queue! Please try again later',
 			})
 			return
 		}
 
+		// checking updated nonce
+		if (this.nonce === -1) {
+			cb({
+				status: 400,
+				message: 'Waiting updated nonce! Please try again',
+			})
+			return
+		}
+
+		// checking is valid address
 		if (!this.web3.utils.isAddress(receiver)) {
-			console.log("Invalid address! Please try again.")
 			cb({
 				status: 400,
 				message: 'Invalid address! Please try again',
@@ -46,97 +51,127 @@ export default class EVM {
 			return
 		}
 
-		if (turl === undefined || turl === null) {
-			console.log('Invalid tweet url! Please try again.')
+		// validate if tweet url is not empty
+		// or length turl is not at least 47 char
+		// 47 char is not include `user name`
+		// pattern => 'https://twitter.com/user/status/123456789123456789'
+		if (!turl || turl.length < 47) {
 			cb({
 				status: 400,
-				message: 'Invalid tweet url! Please try again.',
+				message: 'Invalid tweet url! Please try again',
 			})
 			return
 		}
 
-		let ct = await findTweet(turl)
-		if (!ct) {
-			console.log("Tweet has been used! Please try again.")
+		// validate tweet url is exist or not
+		// on database
+		const exist = await findTweet(turl)
+		if (!exist) {
 			cb({
 				status: 400,
-				message: 'Tweet has used! Please try again',
+				message: 'Tweet has been used! Please try again',
 			})
 			return
 		}
 
-		// indicates this function on the going work
+		// validate tweet content is same with text content
+		// its too validate is valid tweet url
+		const tweet = await isValidTweet(turl, text)
+		if (!tweet?.valid) {
+			cb({
+				status: 400,
+				message: `${tweet?.msg} Please try again`,
+			})
+			return
+		}
+
+		// indicates state still working
 		this.working = true
 
-		const amount = this.AMOUNT
-
-		// checking prev and curr nonce are same
-		if (this.nonce === this.hasNonce) {
-			this.nonce = this.hasNonce + BigInt(1)
+		if (!this.hasNonce) {
+			if (this.nonce === -1) {
+				cb({
+					status: 400,
+					message: 'Something went wrong! Please try again later',
+				})
+				return
+			}
+			this.nonce += BigInt(1)
 		}
 
-		// waiting nonce for new transaction
-		const WaitingNonce = setInterval(async () => {
-			if (this.nonce !== -1) {
-				clearInterval(WaitingNonce)
+		// processing new transaction
+		const amount = this.amount
+		const nonce = this.nonce
 
-				const nonce = this.nonce
-				this.hasNonce = nonce
+		const { txHash, error } = await this.newTransaction(receiver, amount, nonce)
 
-				const { txHash } = await this.newTransaction(receiver, amount, nonce)
-				
-				this.working = false
+		if (txHash) {
+			// waiting transaction status
+			setTimeout(async () => {
+				const tx = await this.web3.eth.getTransactionReceipt(txHash)
 
-				if (txHash) {
-					// initialize data oobject
-					let data = {
+				if (tx?.status || tx?.status === 1) {
+					const data = await newTx({
 						address: receiver,
 						chain: this.ID,
+						cname: this.NAME,
 						tweet: turl,
 						explorer: this.EXPLORER,
 						hash: txHash,
+					})
+					console.log('[DB] >>saving tx->', data)
+					
+					if (this.hasNonce) {
+						this.hasNonce = false
 					}
 
-					const res = await newTx(data)
-					console.log("[DB] >>saving=>", res)
+					this.working = false
 					cb({
 						status: 200,
-						message: `Transaction successful on ${this.NAME}!`,
+						message: `Transaction success on ${this.NAME}!`,
 						txHash,
 					})
 				} else {
+					if (!this.hasNonce) {
+						this.hasNonce = true
+					}
+
+					this.working = false
 					cb({
 						status: 400,
-						message: `Transaction failed on ${this.NAME}!`,
+						message: `Transaction failed on ${this.NAME}! Please try again`,
 					})
 				}
-			} else if (this.nonce === -1) {
-				clearInterval(WaitingNonce)
+			}, 5000)
+		} else {
+			if (!this.hasNonce) {
+				this.hasNonce = true
+			}
 
-				this.working = false
+			this.working = false
+			if (error) {
 				cb({
 					status: 400,
-					message: 'Server is busy! Please try again later'
+					message: `${error}! Please try again later`,
 				})
 			} else {
-				clearInterval(WaitingNonce)
-
-				this.working = false
 				cb({
 					status: 400,
-					message: 'Something went wrong! Please try again later'
+					message: 'Internal server error! Please try again later',
 				})
 			}
-		}, 300)
+		}
+		//END OF STATE
 	}
 
-	// Updating new nonce
+	// Updating incoming nonce
 	async updateNonce() {
 		try {
 			this.nonce = await this.web3.eth.getTransactionCount(this.account.address, 'latest')
+			this.hasNonce = true
 			console.log("success updating nonce!")
 		} catch(err) {
-			console.log("failed can't updating nonce!")
+			console.log("failed updating nonce!")
 		}
 	}
 
@@ -157,7 +192,8 @@ export default class EVM {
 			const signTx = await this.account.signTransaction(tx)
 			signedTx = await this.web3.eth.sendSignedTransaction(signTx?.rawTransaction)
 		} catch(err) {
-			console.error(err)
+			const error = err?.message
+			return { error }
 		}
 
 		const txHash = signedTx?.transactionHash
